@@ -4,10 +4,9 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
-  trivy:
+  trivy-scan:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,12 +19,14 @@ jobs:
       - name: Build Docker image
         run: docker build -t django-nv .
 
-      - name: Install Trivy
+      - name: Install Trivy (latest)
         run: |
-          sudo apt-get install wget -y
-          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.48.4_Linux-64bit.deb
-          sudo dpkg -i trivy_0.48.4_Linux-64bit.deb
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
       - name: Scan Docker image with Trivy
         run: |
-          trivy image --exit-code 1 --severity CRITICAL,HIGH django-nv || true
+          trivy image \
+            --exit-code 1 \
+            --severity CRITICAL,HIGH \
+            --format table \
+            django-nv || true
