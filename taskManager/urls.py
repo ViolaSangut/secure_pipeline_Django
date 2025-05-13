@@ -12,16 +12,14 @@
 # from django.nV for use in another web application!
 #
 
-from django.conf.urls import patterns, include, url
 from django.contrib import admin
+from django.urls import path, include
+from taskManager import views
 
-urlpatterns = patterns('',
-                       url(r'^$',
-                           'taskManager.views.index',
-                           name='index'),
-                       url(r'^taskManager/',
-                           include('taskManager.taskManager_urls',
-                                   namespace="taskManager")),
-                       url(r'^admin/',
-                           include(admin.site.urls)),
-                      )
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('taskManager/', include(('taskManager.taskManager_urls', 'taskManager'), namespace='taskManager')),
+    path('admin/', admin.site.urls),
+]
+
+

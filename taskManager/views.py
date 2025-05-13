@@ -180,8 +180,9 @@ def upload(request, project_id):
 
             #A1 - Injection (SQLi)
             curs = connection.cursor()
-            curs.execute("INSERT INTO taskManager_file (name, path, project_id) VALUES (%s, %s, %s)", [name, upload_path, project_id])
-
+            curs.execute(
+                "insert into taskManager_file ('name','path','project_id') values ('%s','%s',%s)" %
+                (name, upload_path, project_id))
 
             # file = File(
             #name = name,
