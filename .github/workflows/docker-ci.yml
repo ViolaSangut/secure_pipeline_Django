@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,3 +31,13 @@ jobs:
           docker run -d -p 8000:8000 --name django-test django-nv
           sleep 10
           docker ps
+
+      # 🔐 Log in to DockerHub using your secret credentials
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      # 🚀 Tag and push image to DockerHub
+      - name: Tag and Push to DockerHub
+        run: |
+          docker tag django-nv ${{ secrets.DOCKERHUB_USERNAME }}/django-nv:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/django-nv:latest
