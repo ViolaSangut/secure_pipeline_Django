@@ -19,23 +19,27 @@
 """
 
 import os
-
+import shutil
 
 def store_uploaded_file(title, uploaded_file):
-    """ Stores a temporary uploaded file on disk """
-    upload_dir_path = '%s/static/taskManager/uploads' % (
-        os.path.dirname(os.path.realpath(__file__)))
-    if not os.path.exists(upload_dir_path):
-        os.makedirs(upload_dir_path)
+    """Securely stores a temporary uploaded file on disk"""
 
-    # A1: Injection (shell)
-    # Let's avoid the file corruption race condition!
-    os.system(
-        "mv " +
-        uploaded_file.temporary_file_path() +
-        " " +
-        "%s/%s" %
-        (upload_dir_path,
-         title))
+    upload_dir_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        'static',
+        'taskManager',
+        'uploads'
+    )
+    os.makedirs(upload_dir_path, exist_ok=True)
 
-    return '/static/taskManager/uploads/%s' % (title)
+    # Normalize & validate file path
+    safe_title = os.path.basename(title)  # strips directory traversal
+    destination_path = os.path.normpath(os.path.join(upload_dir_path, safe_title))
+
+    # Block if path tries to escape upload_dir
+    if not destination_path.startswith(upload_dir_path):
+        raise Exception("❌ Invalid file path attempt!")
+
+    shutil.move(uploaded_file.temporary_file_path(), destination_path)
+
+    return f'/static/taskManager/uploads/{safe_title}'
