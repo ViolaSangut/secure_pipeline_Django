@@ -1,0 +1,27 @@
+name: OWASP ZAP DAST Scan
+
+on:
+  push:
+    branches: [ main ]     # 🔁 Triggers on every push to main
+ 
+
+jobs:
+  zap-dast:
+    runs-on: ubuntu-latest
+    name: OWASP ZAP Scan
+
+    steps:
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://51.20.70.241:8000'
+          fail_action: false
+          allow_issue_writing: false
+          cmd_options: '-config replacer.full_list(0).enabled=false'
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-dast-report
+          path: zap-report.html
+
