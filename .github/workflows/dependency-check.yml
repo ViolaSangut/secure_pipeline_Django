@@ -1,3 +1,4 @@
+
 name: OWASP Dependency-Check
 
 on:
@@ -11,31 +12,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Java (Dependency-Check needs it)
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Download OWASP Dependency-Check
+      - name: Run OWASP Dependency-Check via Docker
         run: |
-          curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip
-          unzip dependency-check.zip -d dependency-check
-          chmod +x dependency-check/bin/dependency-check.sh
-
-      - name: Run OWASP Dependency-Check on requirements.txt
-        run: |
-          ./dependency-check/bin/dependency-check.sh \
+          docker run --rm \
+            -v $(pwd):/src \
+            --volume dependency-data:/usr/share/dependency-check/data \
+            --volume $(pwd)/odc-reports:/report \
+            owasp/dependency-check \
             --project "django.nv" \
-            --scan requirements.txt \
-            --format "HTML" \
-            --out reports
+            --scan /src \
+            --format "ALL" \
+            --out /report \
+            --failOnCVSS 4
 
-      - name: Upload report
+      - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
-          name: dependency-check-report
-          path: reports
+          name: owasp-dependency-check-report
+          path: odc-reports
