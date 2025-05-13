@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  security-events: write     
+  security-events: write     # Required for SARIF upload
   actions: read
   contents: read
 
@@ -28,16 +28,29 @@ jobs:
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Scan Docker image and generate SARIF report
+      - name: Scan Docker image and save SARIF + JSON
         run: |
+          mkdir -p trivy-reports
           trivy image \
             --exit-code 1 \
             --severity CRITICAL,HIGH \
             --format sarif \
-            --output trivy-results.sarif \
+            --output trivy-reports/trivy-results.sarif \
+            django-nv || true
+          trivy image \
+            --exit-code 0 \
+            --severity CRITICAL,HIGH \
+            --format json \
+            --output trivy-reports/trivy-results.json \
             django-nv || true
 
-      - name: Upload Trivy SARIF to GitHub Security
+      - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: trivy-results.sarif
+          sarif_file: trivy-reports/trivy-results.sarif
+
+      - name: Upload JSON Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-docker-json-report
+          path: trivy-reports/trivy-results.json
