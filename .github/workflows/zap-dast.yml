@@ -14,7 +14,7 @@ jobs:
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: 'http://51.20.70.241:8000'
+          target: ${{ secrets.TARGET_IP }}
           fail_action: false
           allow_issue_writing: false
 
