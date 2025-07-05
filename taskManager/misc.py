@@ -18,24 +18,18 @@
     specific area are stored in misc.py
 """
 
+import subprocess
 import os
 
+def save_uploaded_file(uploaded_file, upload_dir_path, title):
+    # Ensure destination folder exists
+    os.makedirs(upload_dir_path, exist_ok=True)
 
-def store_uploaded_file(title, uploaded_file):
-    """ Stores a temporary uploaded file on disk """
-    upload_dir_path = '%s/static/taskManager/uploads' % (
-        os.path.dirname(os.path.realpath(__file__)))
-    if not os.path.exists(upload_dir_path):
-        os.makedirs(upload_dir_path)
+    src = uploaded_file.temporary_file_path()
+    dst = os.path.join(upload_dir_path, title)
 
-    # A1: Injection (shell)
-    # Let's avoid the file corruption race condition!
-    os.system(
-        "mv " +
-        uploaded_file.temporary_file_path() +
-        " " +
-        "%s/%s" %
-        (upload_dir_path,
-         title))
+    # Use subprocess with list form to prevent shell injection
+    subprocess.run(['mv', src, dst], check=True)
+
 
     return '/static/taskManager/uploads/%s' % (title)
