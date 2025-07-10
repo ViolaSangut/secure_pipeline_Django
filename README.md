@@ -6,13 +6,27 @@
 
 ---
 
+### Prerequisites
+
+- GitHub repository connected to SonarCloud and CodeQL. Follow the following link on how to connect sonarcloud with  github https://www.sonarsource.com/learn/integrating-sonarcloud-with-github/
+- DockerHub account + Personal Access Token (PAT). set duckerhub token in your githb secrets.
+- Running EC2 instance with Docker installed
+- GitHub secrets configured:
+  - `DOCKER_USERNAME`, `DOCKER_PASSWORD`
+  - `SONAR_PROJECT_KEY`, `SONAR_ORG`, `SONAR_TOKEN`
+  - `DAST_TARGET_URL` 
+
+---
+
 ## 🚀 Overview
 
 This pipeline demonstrates a complete DevSecOps workflow using:
 
+
 - **GitHub Actions** (CI/CD automation)
 - **SonarCloud + CodeQL** (Static Analysis)
-- **Trivy + GitLeaks** (Dependency & Secrets Scanning)
+- **Dependabot** (SCA)
+- **Trivy** (Image & Secrets Scanning)
 - **OWASP ZAP** (Dynamic Testing)
 - **DockerHub + EC2** (Deployment)
 
@@ -24,27 +38,24 @@ Each stage is automated and produces reports visible in GitHub or third-party da
 
 ### GitHub Actions Setup
 
-The workflow is defined in `.github/workflows/pipeline.yml`.
-
-Steps include:
+The  CI workflow is defined in `.github/workflows/docker_ci.yml`.
+The file Automates the following steps
 
 - Build Docker image
-- Run static scans
-- Detect secrets and vulnerabilities
 - Push Docker image to DockerHub
-- SSH into EC2 and deploy the container
 
-### Prerequisites
+Note:
+Manual step
+- SSH into EC2 or your deployment environment and deploy the container
 
-- GitHub repository connected to SonarCloud and CodeQL
-- DockerHub account + Personal Access Token (PAT)
-- Running EC2 instance with Docker installed
-- GitHub secrets configured:
-  - `DOCKER_USERNAME`, `DOCKER_PASSWORD`
-  - `EC2_HOST`, `EC2_USER`, `EC2_KEY`
-  - `DAST_TARGET_URL`
+The inegrated tools also runs the following tests automatically everytime code is committed.
+- Run SCA, SAST and DAST scans
+- Scans Image and Detect secrets 
 
----
+Manual step
+
+- SSH into EC2 or your deployment environment and deploy the container
+
 
 ## 🔍 2. Static Application Security Testing (SAST)
 
@@ -64,15 +75,11 @@ Steps include:
 
 ## 🔐 3. Secrets & Dependency Scanning
 
-### Tools: Trivy + GitLeaks
+### Tools: Trivy 
 
 **Trivy:**
 
 - Scans `requirements.txt` for vulnerable packages.
-
-**GitLeaks:**
-
-- Detects hardcoded secrets like tokens and credentials.
 
 **Reports:**
 
@@ -89,7 +96,6 @@ Steps include:
 
 **DockerHub:**
 
-- Image is only pushed if scan passes.
 - Check tags and history on DockerHub after a successful push.
 
 ---
@@ -98,8 +104,8 @@ Steps include:
 
 Once image is pushed:
 
-- GitHub Actions SSHs into the EC2 instance.
-- Pulls the image and runs the container.
+-  SSHs into the EC2 instance.
+- Pull the image and run the container.
 
 ### Deployment Steps
 
@@ -140,20 +146,11 @@ Access the app at: `http://<your-ec2-ip>:8000/`
 1. Code pushed to GitHub.
 2. SonarCloud, CodeQL, GitLeaks, Trivy scans run.
 3. Docker image built, scanned, and pushed to DockerHub.
-4. GitHub Actions connects to EC2 and deploys the app.
-5. OWASP ZAP performs DAST using the live URL.
+4. OWASP ZAP performs DAST using the live URL.
 
 ---
 
-## 📂 Example Secrets Configuration
-
-- `DOCKER_USERNAME`: DockerHub username
-- `DOCKER_PASSWORD`: DockerHub PAT
-- `EC2_HOST`: EC2 public IP
-- `EC2_USER`: usually `ec2-user` or `ubuntu`
-- `EC2_KEY`: contents of your `.pem` SSH key
-- `DAST_TARGET_URL`: public URL of the running app
-
----
-
+## 📌 how to improve
+- Image is only pushed if scan passes.
+- Automate deployment to server is scans passes.
 Feel free to fork the repo, configure your secrets, and try the pipeline!
