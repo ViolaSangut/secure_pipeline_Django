@@ -1,49 +1,159 @@
-django.nV
-=========
+# 🔐 Secure CI/CD Pipeline Setup & Execution – Django App
 
-django.nV is a purposefully vulnerable Django application provided by [nVisium](https://www.nvisium.com/).
+## 📁 Repository
 
-### System Requirements & Setup 
+**GitHub Repo:** [secure\_pipeline\_Django](https://github.com/ViolaSangut/secure_pipeline_Django.git)
 
-First, make sure Python 3.4+ is installed on your machine. On OSX, this can be installed with Homebrew (eg. `brew install python3`). If you receive an error about conflicting PYTHONPATH, try updating the variable to reflect your python version.
+---
 
+## 🚀 Overview
+
+This pipeline demonstrates a complete DevSecOps workflow using:
+
+- **GitHub Actions** (CI/CD automation)
+- **SonarCloud + CodeQL** (Static Analysis)
+- **Trivy + GitLeaks** (Dependency & Secrets Scanning)
+- **OWASP ZAP** (Dynamic Testing)
+- **DockerHub + EC2** (Deployment)
+
+Each stage is automated and produces reports visible in GitHub or third-party dashboards.
+
+---
+
+## ⚙️ 1. CI/CD Workflow
+
+### GitHub Actions Setup
+
+The workflow is defined in `.github/workflows/pipeline.yml`.
+
+Steps include:
+
+- Build Docker image
+- Run static scans
+- Detect secrets and vulnerabilities
+- Push Docker image to DockerHub
+- SSH into EC2 and deploy the container
+
+### Prerequisites
+
+- GitHub repository connected to SonarCloud and CodeQL
+- DockerHub account + Personal Access Token (PAT)
+- Running EC2 instance with Docker installed
+- GitHub secrets configured:
+  - `DOCKER_USERNAME`, `DOCKER_PASSWORD`
+  - `EC2_HOST`, `EC2_USER`, `EC2_KEY`
+  - `DAST_TARGET_URL`
+
+---
+
+## 🔍 2. Static Application Security Testing (SAST)
+
+### Tools: SonarCloud + CodeQL
+
+**SonarCloud:**
+
+- Detects bugs, vulnerabilities, and code smells.
+- Reports available on [SonarCloud Dashboard](https://sonarcloud.io/).
+
+**CodeQL:**
+
+- GitHub-native code analysis.
+- Results are available under **Security > Code scanning alerts** in the repo.
+
+---
+
+## 🔐 3. Secrets & Dependency Scanning
+
+### Tools: Trivy + GitLeaks
+
+**Trivy:**
+
+- Scans `requirements.txt` for vulnerable packages.
+
+**GitLeaks:**
+
+- Detects hardcoded secrets like tokens and credentials.
+
+**Reports:**
+
+- Outputs shown in GitHub Actions logs.
+
+---
+
+## 🐳 4. Container Image Security
+
+### Tool: Trivy (Image Scan)
+
+- Trivy scans the Docker image after it's built.
+- Detects OS and application layer vulnerabilities.
+
+**DockerHub:**
+
+- Image is only pushed if scan passes.
+- Check tags and history on DockerHub after a successful push.
+
+---
+
+## ☁️ 5. Deployment to EC2
+
+Once image is pushed:
+
+- GitHub Actions SSHs into the EC2 instance.
+- Pulls the image and runs the container.
+
+### Deployment Steps
+
+1. Ensure Docker is installed on EC2.
+2. Open necessary ports (e.g., 8000).
+3. Add a public IP or domain name.
+
+Example:
+
+```bash
+ssh -i "your-key.pem" ec2-user@your-ec2-ip
+
+docker pull yourdockerusername/yourimagename:tag
+docker run -d -p 8000:8000 yourdockerusername/yourimagename:tag
 ```
-export PYTHONPATH="/usr/local/lib/python3.4/site-packages"
-```
 
-Before using django.nV, you'll also need to install virtualenv. You should be able to use `pip install virtualenv`, using the pip package manager, to install it. On most systems, pip should be installed alongside python.
+Access the app at: `http://<your-ec2-ip>:8000/`
 
-To set up the repository, use `virtualenv -p python3 venv`, which will create a virtualenv using Python 3. To enter this environment, run `source venv/bin/activate`. You should see your $PS1 update to include `(venv)` to remind you that you are in the virtual environment. You can also leave the environment by simply typing `deactivate`.
+---
 
-### Installation of Dependencies
+## 🌐 6. Dynamic Application Security Testing (DAST)
 
-To install the dependencies, simply run `pip install -r requirements.txt`.
+### Tool: OWASP ZAP
 
-### Database Setup
+- Runs in GitHub Actions after the app is live on EC2.
+- Target URL is defined by the GitHub Secret `DAST_TARGET_URL`.
+- ZAP simulates attacks such as XSS and SQLi.
 
-django.nV provides you with a script automatically creates the database as well as populates it with data. This script is titled `reset_db.sh`. django.nV does not ship with the database, so in order to run the application properly, you'll need to use this script:
+### Reports:
 
-    ./reset_db.sh
+- Summary output in GitHub Actions logs.
+- Can be configured to save JSON or HTML reports as artifacts.
 
-You can also use the same script to reset the database if you make any changes.
+---
 
-### Running the application
-To run the app in its application folder type:
+## 📌 Summary Pipeline Flow
 
-    ./runapp.sh
+1. Code pushed to GitHub.
+2. SonarCloud, CodeQL, GitLeaks, Trivy scans run.
+3. Docker image built, scanned, and pushed to DockerHub.
+4. GitHub Actions connects to EC2 and deploys the app.
+5. OWASP ZAP performs DAST using the live URL.
 
-You should then be able to access the web interface at `http://localhost:8000/`.
+---
 
-### Tutorials
+## 📂 Example Secrets Configuration
 
-django.nV comes with a series of writeups for the vulnerabilities we've added to the code. Each tutorial comes with a description of the vuln, a hint to where to find it, and then the exact bug and how it could be remedied.
+- `DOCKER_USERNAME`: DockerHub username
+- `DOCKER_PASSWORD`: DockerHub PAT
+- `EC2_HOST`: EC2 public IP
+- `EC2_USER`: usually `ec2-user` or `ubuntu`
+- `EC2_KEY`: contents of your `.pem` SSH key
+- `DAST_TARGET_URL`: public URL of the running app
 
-You can access these tutorials within the app at `http://localhost:8000/taskManager/tutorials/`, or by clicking on the 'Tutorials' link in the top-right of the web interface.
+---
 
-### Mail ###
-
-The only mail sent by the app is for the "Forgot Password" feature. You can use the built-in Python mailserver for those messages.
-
-    python -m smtpd -n -c DebuggingServer localhost:1025
-
-If you prefer to use your own mailserver, simply add your settings to `settings.py`.
+Feel free to fork the repo, configure your secrets, and try the pipeline!
