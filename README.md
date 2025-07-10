@@ -150,7 +150,3 @@ Access the app at: `http://<your-ec2-ip>:8000/`
 
 ---
 
-## 📌 how to improve
-- Image is only pushed if scan passes.
-- Automate deployment to server is scans passes.
-Feel free to fork the repo, configure your secrets, and try the pipeline!
